@@ -58,18 +58,55 @@ class AirCargoProblem(Problem):
             """Create all concrete Load actions and return a list
 
             :return: list of Action objects
+
+            Action(Load(c, p, a),
+            	PRECOND: At(c, a) ∧ At(p, a) ∧ Cargo(c) ∧ Plane(p) ∧ Airport(a)
+            	EFFECT: ¬ At(c, a) ∧ In(c, p))
             """
+
             loads = []
-            # TODO create all load ground actions from the domain Load action
+
+            # TODO: Check if using itertools would be faster here
+            for c in self.cargos:
+                for p in self.planes:
+                    for a in self.airports:
+                        precond_pos = [expr("At({}, {})".format(c, a)),
+                                       expr("At({}, {})".format(p, a))]
+                        precond_neg = []
+                        effect_add = [expr("In({}, {})".format(c, p))]
+                        effect_rem = [expr("At({}, {})".format(c, a))]
+                        load = Action(expr("Load({}, {}, {})".format(c, p, a)),
+                                     [precond_pos, precond_neg],
+                                     [effect_add, effect_rem])
+                        loads.append(load)
+
             return loads
 
         def unload_actions():
             """Create all concrete Unload actions and return a list
 
             :return: list of Action objects
+
+            Action(Unload(c, p, a),
+            	PRECOND: In(c, p) ∧ At(p, a) ∧ Cargo(c) ∧ Plane(p) ∧ Airport(a)
+            	EFFECT: At(c, a) ∧ ¬ In(c, p))
             """
             unloads = []
-            # TODO create all Unload ground actions from the domain Unload action
+
+            # TODO: Check if using itertools would be faster here
+            for c in self.cargos:
+                for p in self.planes:
+                    for a in self.airports:
+                        precond_pos = [expr("In({}, {})".format(c, p)),
+                                       expr("At({}, {})".format(p, a))]
+                        precond_neg = []
+                        effect_add = [expr("At({}, {})".format(c, a))]
+                        effect_rem = [expr("In({}, {})".format(c, p))]
+                        unload = Action(expr("Unload({}, {}, {})".format(c, p, a)),
+                                     [precond_pos, precond_neg],
+                                     [effect_add, effect_rem])
+                        unloads.append(unload)
+
             return unloads
 
         def fly_actions():
