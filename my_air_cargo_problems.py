@@ -140,8 +140,8 @@ class AirCargoProblem(Problem):
             e.g. 'FTTTFF'
         :return: list of Action objects
         """
-        # TODO implement
-        possible_actions = []
+        kb = PropKB()
+        possible_actions = [a for a in self.actions if a.check_precond(kb, state)]
         return possible_actions
 
     def result(self, state: str, action: Action):
