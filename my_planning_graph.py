@@ -431,7 +431,21 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         """
-        # TODO test for Interference between nodes
+        for pos_effect in node_a1.action.effect_add:
+            if pos_effect in node_a2.action.precond_neg:
+                return True
+
+        for neg_effect in node_a1.action.effect_rem:
+            if neg_effect in node_a2.action.precond_pos:
+                return True
+
+        for pos_effect in node_a2.action.effect_add:
+            if pos_effect in node_a1.action.precond_neg:
+                return True
+
+        for neg_effect in node_a2.action.effect_rem:
+            if neg_effect in node_a1.action.precond_pos:
+                return True
 
         return False
 
