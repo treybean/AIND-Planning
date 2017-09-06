@@ -529,6 +529,11 @@ class PlanningGraph():
         :return: int
         """
         level_sum = 0
-        # TODO implement
-        # for each goal in the problem, determine the level cost, then add them together
+
+        for goal in self.problem.goal:
+            for i in range(len(self.s_levels)):
+                if goal in {n.symbol for n in self.s_levels[i] if n.is_pos}:
+                    level_sum += i
+                    break
+
         return level_sum
