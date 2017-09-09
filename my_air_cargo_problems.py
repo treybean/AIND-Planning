@@ -11,6 +11,8 @@ from my_planning_graph import PlanningGraph
 
 from functools import lru_cache
 
+from itertools import combinations
+
 
 class AirCargoProblem(Problem):
     def __init__(self, cargos, planes, airports, initial: FluentState, goal: list):
@@ -222,6 +224,24 @@ class AirCargoProblem(Problem):
         pg_levelsum = pg.h_levelsum()
         return pg_levelsum
 
+    def relax_action(self, action):
+        """ Relaxes the passed in action by removing it's preconditions and
+        effects that aren't literals in the goal.
+
+        Returns
+        -------
+        Action: Copy of action with no preconditions and only effects that are
+        literals in the goal.
+        """
+        relevant_effect_adds = [clause for clause in action.effect_add if clause in self.goal]
+        relevant_effect_rems = [clause for clause in action.effect_rem if clause not in self.goal]
+
+        return Action(expr("{}{}".format(action.name, action.args)),
+                     [[], []],
+                     [relevant_effect_adds, relevant_effect_rems])
+
+
+
     @lru_cache(maxsize=8192)
     def h_ignore_preconditions(self, node: Node):
         """This heuristic estimates the minimum number of actions that must be
@@ -229,12 +249,22 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
-        # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
-        count = 0
+        if self.goal_test(node.state):
+            return 0
 
-        kb = PropKB()
-        kb.tell(decode_state(node.state, self.state_map).pos_sentence())
-        return len([clause for clause in self.goal if clause not in kb.clauses])
+        relaxed_actions = [self.relax_action(action) for action in self.actions_list]
+
+        for count in range(1, len(relaxed_actions)):
+            for action_combo in combinations(relaxed_actions, count):
+                result_state = node.state
+
+                for action in action_combo:
+                    result_state = self.result(result_state, action)
+
+                    if self.goal_test(result_state):
+                        return count
+
+        return None
 
 
 def air_cargo_p1() -> AirCargoProblem:
