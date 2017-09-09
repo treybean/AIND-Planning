@@ -224,6 +224,7 @@ class AirCargoProblem(Problem):
         pg_levelsum = pg.h_levelsum()
         return pg_levelsum
 
+
     def relax_action(self, action):
         """ Relaxes the passed in action by removing it's preconditions and
         effects that aren't literals in the goal.
@@ -241,7 +242,6 @@ class AirCargoProblem(Problem):
                      [relevant_effect_adds, relevant_effect_rems])
 
 
-
     @lru_cache(maxsize=8192)
     def h_ignore_preconditions(self, node: Node):
         """This heuristic estimates the minimum number of actions that must be
@@ -254,14 +254,17 @@ class AirCargoProblem(Problem):
 
         relaxed_actions = [self.relax_action(action) for action in self.actions_list]
 
-        for count in range(1, len(relaxed_actions)):
-            for action_combo in combinations(relaxed_actions, count):
+        candidate_actions = [a for a in relaxed_actions if not set(a.effect_add).isdisjoint(self.goal)]
+
+        for count in range(1, len(candidate_actions)):
+            for action_combo in combinations(candidate_actions, count):
                 result_state = node.state
 
-                for action in action_combo:
-                    result_state = self.result(result_state, action)
+                combined_effects = set()
 
-                    if self.goal_test(result_state):
+                for action in action_combo:
+                    combined_effects = combined_effects.union(set(action.effect_add))
+                    if combined_effects == set(self.goal):
                         return count
 
         return None
